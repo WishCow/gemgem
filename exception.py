@@ -1,0 +1,2 @@
+class NoGemAtPosition(Exception):
+    pass

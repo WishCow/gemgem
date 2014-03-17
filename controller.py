@@ -60,7 +60,7 @@ class ModelController:
 
     def notify(self, e):
         if isinstance(e, InitEvent):
-            self.board = Board(5, 5)
+            self.board = Board(6, 5)
             self.board.init()
             self.board.fill_random()
             self.board.select((2, 2))
