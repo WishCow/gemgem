@@ -2,7 +2,6 @@ import pygame
 from pprint import pprint
 import random
 from pygame.locals import *
-from pprint import pprint
 from exception import NoGemAtPosition
 
 GEMSIZE = 64
@@ -34,7 +33,7 @@ class Board:
                     print "{} @ {}".format(possibility, pos)
                     self.put(Gem(possibility, "{}.png".format(possibility)), pos)
                     if self.has_match():
-                        print "Match, backtrack"
+                        print "Backtrack"
                         self.remove(pos)
                     else:
                         break
@@ -57,12 +56,11 @@ class Board:
             return False
 
     def flood_horizontal(self, starting):
-        x, y = starting
         matches = [ starting ]
         gem = self.at(starting)
         i = 1
         while True:
-            look_at = tuple(map(sum, zip(starting, (i, 0))))
+            look_at = tuple(map(sum, zip(starting, (0, i))))
             if self.has(look_at) and self.at(look_at).id == gem.id:
                 matches.append(look_at)
                 i += 1
@@ -70,7 +68,7 @@ class Board:
                 break
         i = -1
         while True:
-            look_at = tuple(map(sum, zip(starting, (i, 0))))
+            look_at = tuple(map(sum, zip(starting, (0, i))))
             if self.has(look_at) and self.at(look_at).id == gem.id:
                 matches.append(look_at)
                 i -= 1
@@ -79,12 +77,11 @@ class Board:
         return matches
 
     def flood_vertical(self, starting):
-        x, y = starting
         matches = [ starting ]
         gem = self.at(starting)
         i = 1
         while True:
-            look_at = tuple(map(sum, zip(starting, (0, i))))
+            look_at = tuple(map(sum, zip(starting, (i, 0))))
             if self.has(look_at) and self.at(look_at).id == gem.id:
                 matches.append(look_at)
                 i += 1
@@ -92,7 +89,7 @@ class Board:
                 break
         i = -1
         while True:
-            look_at = tuple(map(sum, zip(starting, (0, i))))
+            look_at = tuple(map(sum, zip(starting, (i, 0))))
             if self.has(look_at) and self.at(look_at).id == gem.id:
                 matches.append(look_at)
                 i -= 1
@@ -100,7 +97,8 @@ class Board:
                 break
         return matches
 
-    def has_match(self):
+    def find_matches(self):
+        matches = []
         for x in range(self.columns):
             for y in range(self.rows):
                 pos = (x, y)
@@ -108,10 +106,16 @@ class Board:
                     continue
                 horizontal = self.flood_horizontal(pos)
                 vertical = self.flood_vertical(pos)
-                if len(vertical) >= MATCH or len(horizontal) >= MATCH:
-                    print "Match, h: {} v: {}".format(horizontal, vertical)
-                    return True
-        return False
+                if len(vertical) >= MATCH:
+                    print "Vertical: {}".format(vertical)
+                    matches += vertical
+                if len(horizontal) >= MATCH:
+                    print "Horizontal: {}".format(horizontal)
+                    matches += horizontal
+        return matches
+
+    def has_match(self):
+        return len(self.find_matches()) > 0
 
     def remove(self, pos):
         x, y = pos
@@ -120,21 +124,32 @@ class Board:
     def hold(self):
         self.held = self.selected
 
+    def release(self):
+        self.held = ()
+
     def select(self, pos):
         self.selected = pos
 
+    def remove_matches(self):
+        for m in self.find_matches():
+            self.remove(m)
+
+    def remove(self, pos):
+        x, y = pos
+        self.gems[x][y] = None
+
     def move(self, direction):
         change = DIRECTIONS.get(direction)
-        new_pos = map(sum, zip(self.selected, change))
-        if new_pos[1] < 0:
-            new_pos[1] = self.columns - 1
-        elif new_pos[1] > self.columns - 1:
-            new_pos[1] = 0
-        elif new_pos[0] < 0:
-            new_pos[0] = self.rows - 1
-        elif new_pos[0] > self.rows - 1:
-            new_pos[0] = 0
-        self.select(tuple(new_pos))
+        x, y = map(sum, zip(self.selected, change))
+        if x < 0:
+            x = self.columns - 1
+        elif x > self.columns - 1:
+            x = 0
+        elif y < 0:
+            y = self.rows - 1
+        elif y > self.rows - 1:
+            y = 0
+        self.select((x, y))
 
     def swap(self):
         if self.held != self.selected:
@@ -142,7 +157,7 @@ class Board:
             self.gems[s[0]][s[1]], self.gems[h[0]][h[1]] = self.gems[h[0]][h[1]], self.gems[s[0]][s[1]]
         self.held = ()
 
-    def is_valid_swap():
+    def is_valid_swap(self):
         return True
 
     def is_holding(self):

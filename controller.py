@@ -71,6 +71,10 @@ class ModelController:
                 self.board.move(e.key)
             if e.key == K_RETURN:
                 if (self.board.is_holding()):
-                    self.board.swap()
+                    if (self.board.is_valid_swap()):
+                        self.board.swap()
+                        self.board.remove_matches()
+                    else:
+                        self.board.release()
                 else:
                     self.board.hold()
