@@ -3,18 +3,18 @@ from pygame.locals import *
 from controller import *
 from event import EventManager, InitEvent
 
-WINDOWWIDTH = 600
-WINDOWHEIGHT = 600
-
-BOARD = (8, 8)
-
 def main():
+    board = Board(6, 5)
+    board.init()
+    board.fill_random()
+
     evtmgr = EventManager()
     cpu = CPUTickController(evtmgr)
     evtmgr.add(cpu)
     evtmgr.add(KeyboardController(evtmgr))
     evtmgr.add(PygameController(evtmgr))
-    evtmgr.add(ModelController(evtmgr))
+    evtmgr.add(ModelController(evtmgr, board))
+    evtmgr.add(AnimationController(evtmgr, board))
     evtmgr.trigger(InitEvent())
     cpu.run()
 

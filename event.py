@@ -26,6 +26,15 @@ class KeyboardEvent(Event):
         Event.__init__(self, "Keypress")
         self.key = key
 
+class MatchEvent(Event):
+    def __init__(self, matches):
+        Event.__init__(self, "Match")
+        self.matches = matches
+
+class MatchResolvedEvent(Event):
+    def __init__(self, matches):
+        self.matches = matches
+
 class EventManager:
     def __init__(self):
         self.listeners = {}
@@ -40,3 +49,4 @@ class EventManager:
     def trigger(self, event):
         for l in self.listeners.keys():
             l.notify(event)
+

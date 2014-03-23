@@ -2,6 +2,7 @@ from event import *
 from pygame.locals import *
 from model import *
 import pygame
+from pprint import pprint
 
 class CPUTickController:
     def __init__(self, evtmgr):
@@ -21,6 +22,7 @@ class CPUTickController:
 class KeyboardController:
     def __init__(self, evtmgr):
         self.evtmgr = evtmgr
+        self.suspend = False
 
     def notify(self, event):
         if isinstance(event, TickEvent):
@@ -35,6 +37,10 @@ class KeyboardController:
                         ev = KeyboardEvent(event.key)
                 if ev:
                     self.evtmgr.trigger(ev)
+        elif isinstance(event, MatchEvent):
+            self.suspend = True
+        elif isinstance(event, MatchResolvedEvent):
+            self.suspend = False
 
 class PygameController:
     def __init__(self, evtmgr):
@@ -54,18 +60,15 @@ class PygameController:
             pygame.display.flip()
 
 class ModelController:
-    def __init__(self, evtmgr):
+    def __init__(self, evtmgr, board):
         self.evtmgr = evtmgr
-        self.board = None
+        self.board = board
 
     def notify(self, e):
-        if isinstance(e, InitEvent):
-            self.board = Board(6, 5)
-            self.board.init()
-            self.board.fill_random()
-            self.board.select((2, 2))
-        if isinstance(e, DrawEvent):
-            self.board.draw(e.surface)
+        if isinstance(e, MatchResolvedEvent):
+            for p in e.matches:
+                self.board.remove(p)
+
         if isinstance(e, KeyboardEvent):
             if e.key in [ K_UP, K_DOWN, K_LEFT, K_RIGHT ]:
                 self.board.move(e.key)
@@ -73,8 +76,42 @@ class ModelController:
                 if (self.board.is_holding()):
                     if (self.board.is_valid_swap()):
                         self.board.swap()
-                        self.board.remove_matches()
+                        if self.board.has_match():
+                            self.evtmgr.trigger(MatchEvent(self.board.find_matches()))
                     else:
                         self.board.release()
                 else:
                     self.board.hold()
+
+GEMSIZE = 64
+class AnimationController:
+    def __init__(self, evtmgr, board):
+        self.evtmgr = evtmgr
+        self.matches = []
+        self.board = board
+        self.tick = 0
+
+    def notify(self, e):
+        if isinstance(e, MatchEvent):
+            self.matches = e.matches
+        if isinstance(e, DrawEvent):
+            for x, row in enumerate(self.board.gems):
+                for y, gem in enumerate(row):
+                    pos = (x * GEMSIZE, y * GEMSIZE)
+                    color = (30, 30, 30)
+                    if self.board.held == (x, y):
+                        color = (255, 0, 0)
+                    elif self.board.selected == (x, y):
+                        color = (255, 255, 0)
+                    pygame.draw.rect(e.surface, color, pygame.Rect(pos, (GEMSIZE, GEMSIZE)), 1)
+                    if gem:
+                        if (x, y) in self.matches:
+                            self.evtmgr.trigger(MatchResolvedEvent(self.matches))
+                        else:
+                            e.surface.blit(gem.surface, pos)
+        if isinstance(e, MatchResolvedEvent):
+            self.reset()
+
+    def reset(self):
+        self.tick = 0
+        self.matches = []

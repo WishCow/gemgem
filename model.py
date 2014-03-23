@@ -4,7 +4,6 @@ import random
 from pygame.locals import *
 from exception import NoGemAtPosition
 
-GEMSIZE = 64
 DIRECTIONS = { K_UP: (0, -1), K_DOWN: (0, 1), K_RIGHT: (1, 0), K_LEFT: (-1, 0) }
 MATCH = 3
 
@@ -13,7 +12,7 @@ class Board:
         self.rows = rows
         self.columns = columns
         self.gems = []
-        self.selected = ()
+        self.selected = (0, 0)
         self.held = ()
 
     def init(self):
@@ -112,13 +111,15 @@ class Board:
                 if len(horizontal) >= MATCH:
                     print "Horizontal: {}".format(horizontal)
                     matches += horizontal
-        return matches
+        return set(matches)
 
     def has_match(self):
         return len(self.find_matches()) > 0
 
     def remove(self, pos):
         x, y = pos
+        gem = self.gems[x][y]
+        gem.get_rect().move_ip()
         self.gems[x][y] = None
 
     def hold(self):
@@ -129,10 +130,6 @@ class Board:
 
     def select(self, pos):
         self.selected = pos
-
-    def remove_matches(self):
-        for m in self.find_matches():
-            self.remove(m)
 
     def remove(self, pos):
         x, y = pos
@@ -162,20 +159,6 @@ class Board:
 
     def is_holding(self):
         return self.held != ()
-
-    def draw(self, surface):
-        for x, row in enumerate(self.gems):
-            for y, gem in enumerate(row):
-                pos = (x * GEMSIZE, y * GEMSIZE)
-                color = (30, 30, 30)
-                if self.held == (x, y):
-                    color = (255, 0, 0)
-                elif self.selected == (x, y):
-                    color = (255, 255, 0)
-                pygame.draw.rect(surface, color, pygame.Rect(pos, (GEMSIZE, GEMSIZE)), 1)
-                if (gem):
-                    surface.blit(gem.surface, pos)
-
 
     def put(self, gem, at):
         x, y = at
