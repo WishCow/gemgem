@@ -97,7 +97,7 @@ class Board:
         return matches
 
     def find_matches(self):
-        matches = []
+        matches = set()
         for x in range(self.columns):
             for y in range(self.rows):
                 pos = (x, y)
@@ -106,12 +106,12 @@ class Board:
                 horizontal = self.flood_horizontal(pos)
                 vertical = self.flood_vertical(pos)
                 if len(vertical) >= MATCH:
-                    print "Vertical: {}".format(vertical)
-                    matches += vertical
+                    matches.update(vertical)
                 if len(horizontal) >= MATCH:
-                    print "Horizontal: {}".format(horizontal)
-                    matches += horizontal
-        return set(matches)
+                    matches.update(horizontal)
+        if len(matches):
+            print "Matches: {}".format(matches)
+        return matches
 
     def has_match(self):
         return len(self.find_matches()) > 0
