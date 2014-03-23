@@ -30,7 +30,7 @@ class Board:
                 random.shuffle(possibilities)
                 for possibility in possibilities:
                     print "{} @ {}".format(possibility, pos)
-                    self.put(Gem(possibility, "{}.png".format(possibility)), pos)
+                    self.put(Gem(possibility, "assets/gem/default/{}.png".format(possibility)), pos)
                     if self.has_match():
                         print "Backtrack"
                         self.remove(pos)
